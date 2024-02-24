@@ -1,5 +1,5 @@
 [package]
-name = "tracing_setup"
+name = "tracing-setup"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,3 +17,4 @@ opentelemetry = {version="0.20.0", features= ["trace"], optional = true}
 
 [features]
 jaeger = ["tracing-opentelemetry", "opentelemetry-jaeger", "opentelemetry"]
+
