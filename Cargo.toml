@@ -1,0 +1,19 @@
+[package]
+name = "tracing_setup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4"
+tracing = "0.1.40"
+tracing-subscriber = {version = "0.3.18", features = ["env-filter", "json"]}
+tracing-appender = "0.2.3"
+
+tracing-opentelemetry = {version="0.22.0", optional = true}
+opentelemetry-jaeger = {version="0.20.0", optional = true}
+
+# to shutdown the tracer provider to flush jaeger
+opentelemetry = {version="0.20.0", features= ["trace"], optional = true}
+
+[features]
+jaeger = ["tracing-opentelemetry", "opentelemetry-jaeger", "opentelemetry"]
