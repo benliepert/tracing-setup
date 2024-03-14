@@ -853,6 +853,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-setup"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "opentelemetry 0.20.0",
+ "opentelemetry-jaeger",
+ "tracing",
+ "tracing-appender",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "tracing-subscriber"
 version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -871,19 +884,6 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
-]
-
-[[package]]
-name = "tracing_setup"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "opentelemetry 0.20.0",
- "opentelemetry-jaeger",
- "tracing",
- "tracing-appender",
- "tracing-opentelemetry",
- "tracing-subscriber",
 ]
 
 [[package]]

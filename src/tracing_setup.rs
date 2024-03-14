@@ -77,7 +77,7 @@ impl Default for TracingConfig {
 /// Initialize the tracing system based on a config
 ///
 /// Returns an option to a WorkerGuard, which will flush all pending logs when dropped.
-/// This is specifically for writing to a file. When config.log_to_file is false, this will
+/// This is specifically for writing to a file. When `config.log_to_file` is false, this will
 /// return None.
 pub fn init_tracing(config: TracingConfig) -> Option<WorkerGuard> {
     // this separation is necessary because adding layers changes the type of the subscriber,
@@ -91,17 +91,10 @@ pub fn init_tracing(config: TracingConfig) -> Option<WorkerGuard> {
         TracingMode::ConsoleAndFile => configure_combined_logging(config),
         #[cfg(feature = "jaeger")]
         TracingMode::JaegerLive => {
-            #[cfg(feature = "jaeger")]
-            {
-                use crate::jaeger::jaeger_impl::*;
-                wait_for_jaeger(&config.jaeger_hostname); // block until jaeger is running
-                println!("Initializing tracing for live streaming to Jaeger. Make sure you start the Jaeger Docker container.");
-                init_jaeger(config);
-            }
-            #[cfg(not(feature = "jaeger"))]
-            {
-                println!("Jaeger tracing is not enabled. Please enable the 'jaeger' feature. The app will still run, but you won't see any output");
-            }
+            use crate::jaeger::jaeger_impl::*;
+            wait_for_jaeger(&config.jaeger_hostname); // block until jaeger is running
+            println!("Initializing tracing for live streaming to Jaeger. Make sure you start the Jaeger Docker container.");
+            init_jaeger(config);
 
             None
         }
