@@ -30,7 +30,8 @@ pub struct TracingConfig {
 
     /// Environment filter for tracing.
     ///
-    /// See ['EnvFilter](tracing_subscriber::EnvFilter)
+    /// If None, uses the default env var with [from_default_env](tracing_subscriber::EnvFilter::from_default_env).
+    /// See [EnvFilter]
     pub env_filter: Option<String>,
 
     /// Use JSON formatting for logs. This applies to all tracing modes except Jaeger.
@@ -43,6 +44,7 @@ pub struct TracingConfig {
     ///
     /// See [`SubscriberBuilder::with_ansi`](tracing_subscriber::fmt::SubscriberBuilder::with_ansi)
     pub ansi_file: bool,
+
     /// Lossy file writing
     ///
     /// See [`NonBlockingBuilder::lossy`](tracing_appender::non_blocking::NonBlockingBuilder::lossy)

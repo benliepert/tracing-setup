@@ -2,9 +2,11 @@
 name = "tracing-setup"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.80"
 
 [dependencies]
-chrono = "0.4"
+chrono = "0.4.38"
+time = "0.3.36"
 tracing = "0.1.40"
 tracing-subscriber = {version = "0.3.18", features = ["env-filter", "json"]}
 tracing-appender = "0.2.3"
