@@ -1,5 +1,6 @@
 [package]
 name = "tracing-setup"
+authors = ["Ben Liepert <ben.liepert@gmail.com>"]
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.80"
@@ -19,4 +20,3 @@ opentelemetry = {version="0.20.0", features= ["trace"], optional = true}
 
 [features]
 jaeger = ["tracing-opentelemetry", "opentelemetry-jaeger", "opentelemetry"]
-
