@@ -872,7 +872,6 @@ dependencies = [
  "chrono",
  "opentelemetry 0.20.0",
  "opentelemetry-jaeger",
- "time",
  "tracing",
  "tracing-appender",
  "tracing-opentelemetry",

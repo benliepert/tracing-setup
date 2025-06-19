@@ -36,12 +36,12 @@ pub struct ConsoleCfg {
     /// ANSI colors in the console
     ///
     /// See [`SubscriberBuilder::with_ansi`](tracing_subscriber::fmt::SubscriberBuilder::with_ansi)
-    pub ansi_console: bool,
+    pub ansi_colors: bool,
 }
 
 impl Default for ConsoleCfg {
     fn default() -> Self {
-        ConsoleCfg { ansi_console: true }
+        ConsoleCfg { ansi_colors: true }
     }
 }
 
@@ -53,20 +53,20 @@ pub struct FileCfg {
     /// ANSI colors in the file
     ///
     /// See [`SubscriberBuilder::with_ansi`](tracing_subscriber::fmt::SubscriberBuilder::with_ansi)
-    pub ansi_file: bool,
+    pub ansi_colors: bool,
 
     /// Lossy file writing
     ///
     /// See [`NonBlockingBuilder::lossy`](tracing_appender::non_blocking::NonBlockingBuilder::lossy)
-    pub lossy_file: bool,
+    pub lossy_writing: bool,
 }
 
 impl Default for FileCfg {
     fn default() -> Self {
         FileCfg {
             log_dir: "./logs",
-            ansi_file: false,
-            lossy_file: true,
+            ansi_colors: false,
+            lossy_writing: true,
         }
     }
 }
@@ -74,7 +74,7 @@ impl Default for FileCfg {
 /// Holds information about how tracing should be configured
 #[derive(Debug, Default)]
 pub struct TracingConfig {
-    pub tracing_mode: TracingMode,
+    pub mode: TracingMode,
 
     /// Environment filter for tracing. This controls the log levels and modules that are logged.
     ///
@@ -86,6 +86,29 @@ pub struct TracingConfig {
     pub json: bool,
 }
 
+impl TracingConfig {
+    /// Create a new tracing config with the given tracing mode
+    pub fn new(tracing_mode: TracingMode) -> Self {
+        Self {
+            mode: tracing_mode,
+            env_filter: None,
+            json: false,
+        }
+    }
+
+    /// Set the environment filter for this config
+    pub fn with_env_filter(mut self, env_filter: impl Into<String>) -> Self {
+        self.env_filter = Some(env_filter.into());
+        self
+    }
+
+    /// Set whether to use JSON formatting for this config
+    pub fn with_json(mut self, json: bool) -> Self {
+        self.json = json;
+        self
+    }
+}
+
 /// Initialize the tracing system based on a config
 ///
 /// Returns an option to a WorkerGuard, which will flush all pending logs when dropped.
@@ -93,7 +116,7 @@ pub struct TracingConfig {
 pub fn init_tracing(config: TracingConfig) -> Option<WorkerGuard> {
     // this separation is necessary because adding layers changes the type of the subscriber,
     // so it's impossible to genericize and make this cleaner^
-    match config.tracing_mode {
+    match config.mode {
         TracingMode::Console(console_cfg) => {
             configure_console_logging(&console_cfg, config.env_filter, config.json);
             None
@@ -109,7 +132,7 @@ pub fn init_tracing(config: TracingConfig) -> Option<WorkerGuard> {
             use crate::jaeger::jaeger_impl::*;
             wait_for_jaeger(&jaeger_cfg.jaeger_hostname); // block until jaeger is running
             println!("Initializing tracing for live streaming to Jaeger. Make sure you start the Jaeger Docker container.");
-            init_jaeger(&jaeger_cfg, &config.env_filter);
+            init_jaeger(&jaeger_cfg, config.env_filter);
             None
         }
     }
@@ -124,9 +147,9 @@ fn configure_file_logging(
     let (non_blocking, guard) = file_writer(config);
 
     let subscriber_builder = FmtSubscriber::builder()
-        .with_env_filter(get_env_filter(&env_filter))
+        .with_env_filter(get_env_filter(env_filter))
         .with_span_events(DEFAULT_SPAN_EVENTS)
-        .with_ansi(config.ansi_file)
+        .with_ansi(config.ansi_colors)
         .with_writer(non_blocking);
 
     // since adding json formatting changes the type, some code needs to be duplicated
@@ -145,9 +168,9 @@ fn configure_file_logging(
 fn configure_console_logging(config: &ConsoleCfg, env_filter: Option<String>, json: bool) {
     // let format = fmt::format().json();
     let subscriber_builder = FmtSubscriber::builder()
-        .with_env_filter(get_env_filter(&env_filter))
+        .with_env_filter(get_env_filter(env_filter))
         .with_span_events(DEFAULT_SPAN_EVENTS)
-        .with_ansi(config.ansi_console);
+        .with_ansi(config.ansi_colors);
 
     // since adding json formatting changes the type, some code needs to be duplicated
     if json {
@@ -171,7 +194,7 @@ fn configure_combined_logging(
 
     // File writer setup
     let (non_blocking, guard) = file_writer(file_cfg);
-    let env_filter = EnvFilter::new(get_env_filter(&env_filter));
+    let env_filter = EnvFilter::new(get_env_filter(env_filter));
 
     // due to some complexities in the type system, this code is duplicated
     // the only difference is that when layers are added to the subscriber, if config.json
@@ -180,11 +203,11 @@ fn configure_combined_logging(
         let stdout_layer = fmt::layer()
             .with_writer(std::io::stdout)
             .with_span_events(DEFAULT_SPAN_EVENTS)
-            .with_ansi(console_cfg.ansi_console);
+            .with_ansi(console_cfg.ansi_colors);
         let file_layer = fmt::layer()
             .with_writer(non_blocking)
             .with_span_events(DEFAULT_SPAN_EVENTS)
-            .with_ansi(file_cfg.ansi_file);
+            .with_ansi(file_cfg.ansi_colors);
         let subscriber = tracing_subscriber::registry()
             .with(stdout_layer.json())
             .with(file_layer.json())
@@ -194,11 +217,11 @@ fn configure_combined_logging(
         let stdout_layer = fmt::layer()
             .with_writer(std::io::stdout)
             .with_span_events(DEFAULT_SPAN_EVENTS)
-            .with_ansi(console_cfg.ansi_console);
+            .with_ansi(console_cfg.ansi_colors);
         let file_layer = fmt::layer()
             .with_writer(non_blocking)
             .with_span_events(DEFAULT_SPAN_EVENTS)
-            .with_ansi(file_cfg.ansi_file);
+            .with_ansi(file_cfg.ansi_colors);
         let subscriber = tracing_subscriber::registry()
             .with(stdout_layer)
             .with(file_layer)
@@ -211,9 +234,9 @@ fn configure_combined_logging(
 /// Return an environment filter based on the provided config.
 /// If config.env_filter is None, the default filter will be used
 /// See [`EnvFilter::from_default_env`](tracing_subscriber::EnvFilter::from_default_env)
-pub(crate) fn get_env_filter(filter: &Option<String>) -> String {
-    if let Some(filter) = &filter {
-        filter.clone()
+pub(crate) fn get_env_filter(filter: Option<String>) -> String {
+    if let Some(filter) = filter {
+        filter
     } else {
         EnvFilter::from_default_env().to_string()
     }
@@ -227,7 +250,7 @@ fn file_writer(config: &FileCfg) -> (NonBlocking, WorkerGuard) {
     create_parent_directory(&filename).expect("Failed to create parent log directory");
     let file_writer = File::create(&filename).expect("Failed to create log file");
     NonBlockingBuilder::default()
-        .lossy(config.lossy_file)
+        .lossy(config.lossy_writing)
         .finish(file_writer)
 }
 

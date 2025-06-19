@@ -26,7 +26,7 @@ pub mod jaeger_impl {
 
     // You can specify a more detailed envfilter like this:
     // "info,eframe=warn,shalias_ui=trace,shalias=trace"
-    pub fn init_jaeger(config: &JaegerCfg, env_filter: &Option<String>) {
+    pub fn init_jaeger(config: &JaegerCfg, env_filter: Option<String>) {
         let filter_layer = EnvFilter::new(get_env_filter(env_filter));
         let fmt_layer = tracing_subscriber::fmt::Layer::default();
 
